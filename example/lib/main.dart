@@ -29,6 +29,8 @@ class MyHomePage extends StatelessWidget {
     var endDate = DateUtils.getLastDayOfNextMonth();
     monthCalendarro = Calendarro(
         startDate: startDate,
+        pageSnapping: true,
+        scrollDirection: Axis.vertical,
         endDate: endDate,
         displayMode: DisplayMode.MONTHS,
         selectionMode: SelectionMode.MULTI,
