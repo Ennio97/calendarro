@@ -1,6 +1,6 @@
+import 'package:calendarro/calendarro.dart';
 import 'package:calendarro/date_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:calendarro/calendarro.dart';
 
 void main() => runApp(new MyApp());
 
@@ -21,22 +21,46 @@ class MyHomePage extends StatelessWidget {
   final String title;
   Calendarro monthCalendarro;
 
+  Map<DateTime, dynamic> events = new Map<DateTime, dynamic>();
+
   MyHomePage({Key key, this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     var startDate = DateUtils.getFirstDayOfCurrentMonth();
-    var endDate = DateUtils.getLastDayOfNextMonth();
+    var endDate = startDate.add(Duration(days: 365));
+
+    events = {
+      new DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day): [
+        {"title": "test", "id": 0},
+        {"title": "event2", "id": 1},
+      ],
+      new DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day + 1): [
+        {"title": "test3", "id": 0},
+        {"title": "event4", "id": 1},
+      ],
+      new DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day + 2): [
+        {"title": "test5", "id": 0},
+        {"title": "event6", "id": 1},
+        {"title": "event6", "id": 2},
+      ],
+    };
     monthCalendarro = Calendarro(
         startDate: startDate,
         pageSnapping: true,
+        events: events,
+        weekEndDaysEnabled: false,
         scrollDirection: Axis.vertical,
         endDate: endDate,
         displayMode: DisplayMode.MONTHS,
-        selectionMode: SelectionMode.MULTI,
+        selectionMode: SelectionMode.MONTHLY,
         weekdayLabelsRow: CustomWeekdayLabelsRow(),
-        onTap: (date) {
-          print("onTap: $date");
+        onTap: (date, events) {
+          print("onTap date: $date");
+          print("onTap events: $events");
         });
     return new Scaffold(
       appBar: new AppBar(

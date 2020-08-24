@@ -8,14 +8,16 @@ import 'package:calendarro/default_weekday_labels_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'date_utils.dart';
+
 abstract class DayTileBuilder {
-  Widget build(BuildContext context, DateTime date, DateTimeCallback onTap);
+  Widget build(BuildContext context, DateTime date, DateTimeCallback onTap, List<dynamic> events);
 }
 
 enum DisplayMode { MONTHS, WEEKS }
-enum SelectionMode { SINGLE, MULTI, RANGE }
+enum SelectionMode { SINGLE, MULTI, RANGE, MONTHLY, WEEKLY }
 
-typedef void DateTimeCallback(DateTime datetime);
+typedef void DateTimeCallback(DateTime datetime, List<dynamic> events);
 typedef void CurrentPageCallback(DateTime pageStartDate, DateTime pageEndDate);
 
 class Calendarro extends StatefulWidget {
@@ -28,6 +30,7 @@ class Calendarro extends StatefulWidget {
   DateTimeCallback onTap;
   CurrentPageCallback onPageSelected;
   Axis scrollDirection;
+  Map<DateTime, dynamic> events;
   bool pageSnapping;
 
   DateTime selectedSingleDate;
@@ -35,6 +38,9 @@ class Calendarro extends StatefulWidget {
 
   int startDayOffset;
   CalendarroState state;
+
+  bool weekEndDaysEnabled;
+  List<DateTime> dateDisabled;
 
   double dayTileHeight = 40.0;
   double dayLabelHeight = 20.0;
@@ -47,11 +53,13 @@ class Calendarro extends StatefulWidget {
     this.dayTileBuilder,
     this.selectedSingleDate,
     this.selectedDates,
+    this.events,
     this.selectionMode = SelectionMode.SINGLE,
     this.onTap,
     this.onPageSelected,
     this.weekdayLabelsRow,
     this.pageSnapping = false,
+    this.weekEndDaysEnabled = true,
     this.scrollDirection = Axis.horizontal,
   }) : super(key: key) {
     if (startDate == null) {
@@ -155,6 +163,12 @@ class CalendarroState extends State<Calendarro> {
         case SelectionMode.RANGE:
           _setRangeSelectedDate(date);
           break;
+        case SelectionMode.MONTHLY:
+          _setMonthlySelectedDate(date);
+          break;
+        case SelectionMode.WEEKLY:
+          _setWeeklySelectedDate(date);
+          break;
       }
     });
   }
@@ -233,6 +247,18 @@ class CalendarroState extends State<Calendarro> {
                 dateBetweenDatesRange;
         }
         break;
+      case SelectionMode.MONTHLY:
+        final matchedSelectedDate = selectedDates.firstWhere(
+            (currentDate) => DateUtils.isSameDay(currentDate, date),
+            orElse: () => null);
+        return matchedSelectedDate != null;
+        break;
+      case SelectionMode.WEEKLY:
+        final matchedSelectedDate = selectedDates.firstWhere(
+            (currentDate) => DateUtils.isSameDay(currentDate, date),
+            orElse: () => null);
+        return matchedSelectedDate != null;
+        break;
     }
   }
 
@@ -265,9 +291,11 @@ class CalendarroState extends State<Calendarro> {
     DateRange pageDateRange = _calculatePageDateRange(position);
 
     return CalendarroPage(
-        pageStartDate: pageDateRange.startDate,
-        pageEndDate: pageDateRange.endDate,
-        weekdayLabelsRow: widget.weekdayLabelsRow);
+      pageStartDate: pageDateRange.startDate,
+      pageEndDate: pageDateRange.endDate,
+      weekdayLabelsRow: widget.weekdayLabelsRow,
+      events: widget.events,
+    );
   }
 
   Widget _buildCalendarPageInMonthsMode(int position) {
@@ -277,6 +305,7 @@ class CalendarroState extends State<Calendarro> {
       pageStartDate: pageDateRange.startDate,
       pageEndDate: pageDateRange.endDate,
       weekdayLabelsRow: widget.weekdayLabelsRow,
+      events: widget.events,
     );
   }
 
@@ -367,5 +396,61 @@ class CalendarroState extends State<Calendarro> {
     } else {
       selectedDates.add(date);
     }
+  }
+
+  void _setWeeklySelectedDate(DateTime date) {
+    selectedDates.clear();
+    int numberOfWeeks =
+        DateUtils.calculateWeeksNumber(widget.startDate, widget.endDate);
+
+    selectedDates.add(date);
+
+    for (int i = 0; i < numberOfWeeks; i++) {
+      DateTime dateToAdd = selectedDates.last;
+      DateTime nextDate = dateToAdd.add(Duration(days: 7));
+      if (nextDate.month <= widget.endDate.month) {
+        selectedDates.add(nextDate);
+      }
+    }
+  }
+
+  void _setMonthlySelectedDate(DateTime date) {
+    selectedDates.clear();
+    selectedDates.add(date);
+    DateTime nextDate = selectedDates.last;
+
+    int monthsNumber =
+        DateUtils.calculateMonthsDifference(widget.startDate, widget.endDate);
+
+    print("MONTHS -> $monthsNumber");
+
+    for (int i = 0; i < monthsNumber; i++) {
+      if (selectedDates.last.month == 12) {
+        nextDate = new DateTime(
+            selectedDates.last.year + 1, 1, selectedDates.last.day);
+      } else {
+        nextDate = new DateTime(selectedDates.first.year,
+            selectedDates.first.month + i + 1, selectedDates.last.day);
+      }
+      print(
+          "The date $nextDate is in WeekEnd: ${DateUtils.isWeekend(nextDate)}");
+
+      if (!DateUtils.isWeekend(nextDate)) {
+        selectedDates.add(nextDate);
+      }
+
+      /*selectedDates.add(nextDate);
+      if (widget.weekEndDaysEnabled) {
+        selectedDates.add(nextDate);
+      } else {
+        if (!DateUtils.isWeekend(nextDate)) {
+          selectedDates.add(nextDate);
+        }
+      }*/
+    }
+
+    selectedDates.forEach((element) {
+      print("${element.day} - ${element.month}");
+    });
   }
 }
