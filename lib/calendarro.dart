@@ -11,7 +11,8 @@ import 'package:flutter/rendering.dart';
 import 'date_utils.dart';
 
 abstract class DayTileBuilder {
-  Widget build(BuildContext context, DateTime date, DateTimeCallback onTap, List<dynamic> events);
+  Widget build(BuildContext context, DateTime date, DateTimeCallback onTap,
+      List<dynamic> events);
 }
 
 enum DisplayMode { MONTHS, WEEKS }
@@ -32,6 +33,7 @@ class Calendarro extends StatefulWidget {
   Axis scrollDirection;
   Map<DateTime, dynamic> events;
   bool pageSnapping;
+  List<DateTime> datesDisabled;
 
   DateTime selectedSingleDate;
   List<DateTime> selectedDates;
@@ -40,10 +42,12 @@ class Calendarro extends StatefulWidget {
   CalendarroState state;
 
   bool weekEndDaysEnabled;
-  List<DateTime> dateDisabled;
+
 
   double dayTileHeight = 40.0;
   double dayLabelHeight = 20.0;
+
+  Widget disabledDay;
 
   Calendarro({
     Key key,
@@ -54,9 +58,11 @@ class Calendarro extends StatefulWidget {
     this.selectedSingleDate,
     this.selectedDates,
     this.events,
+    this.disabledDay,
     this.selectionMode = SelectionMode.SINGLE,
     this.onTap,
     this.onPageSelected,
+    this.datesDisabled,
     this.weekdayLabelsRow,
     this.pageSnapping = false,
     this.weekEndDaysEnabled = true,
@@ -89,9 +95,8 @@ class Calendarro extends StatefulWidget {
       selectedDates = List();
     }
   }
-
   static CalendarroState of(BuildContext context) =>
-      context.ancestorStateOfType(const TypeMatcher<CalendarroState>());
+      context.findAncestorStateOfType<CalendarroState>();
 
   @override
   CalendarroState createState() {
@@ -260,6 +265,19 @@ class CalendarroState extends State<Calendarro> {
         return matchedSelectedDate != null;
         break;
     }
+  }
+
+  bool isDateDisabled(DateTime date) {
+    DateTime dateDisabledFound;
+    if (widget.datesDisabled != null){
+      dateDisabledFound = widget.datesDisabled.firstWhere(
+              (dateDisabled) =>
+          DateUtils.toMidnight(dateDisabled) == DateUtils.toMidnight(date),
+          orElse: () => null);
+
+      return dateDisabledFound != null;
+    }
+    return false;
   }
 
   void toggleDateSelection(DateTime date) {

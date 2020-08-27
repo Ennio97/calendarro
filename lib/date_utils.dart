@@ -140,6 +140,76 @@ class DateUtils {
     return rowsNumber;
   }
 
+  static List<DateTime> getDateTimeListBetweenDates(
+      DateTime startDate, DateTime endDate,
+      {bool skipWeekEnds = true, List<DateTime> datesToSkip}) {
+    startDate = DateUtils.toMidnight(startDate);
+    endDate = DateUtils.toMidnight(endDate);
+    List<DateTime> dateTimesList = List<DateTime>();
+    print("GET DATES BETWEEN: $startDate AND $endDate");
+    print("DIFFERENCE : ${endDate.difference(startDate).inDays}");
+    print("Dates to skip: $datesToSkip");
+
+    for (int i = 0; i < endDate.difference(startDate).inDays; i++) {
+      DateTime dateToAdd = startDate.add(Duration(days: i));
+
+
+      print("Date To Add: ${dateToAdd}");
+
+
+      if (datesToSkip != null) {
+        int indexOfDisabledDate = datesToSkip.indexOf(dateToAdd);
+        print(indexOfDisabledDate);
+
+        //DateTime dateToSkipFounded = datesToSkip.firstWhere((element) => element == dateToAdd, orElse: () => null);
+
+        if (indexOfDisabledDate == -1) {
+          if (skipWeekEnds) {
+            if (dateToAdd.weekday != DateTime.saturday &&
+                dateToAdd.weekday != DateTime.sunday) {
+              dateTimesList.add(dateToAdd);
+            }
+          } else {
+            dateTimesList.add(dateToAdd);
+          }
+        }
+      } else {
+        if (skipWeekEnds) {
+          if (dateToAdd.weekday != DateTime.saturday &&
+              dateToAdd.weekday != DateTime.sunday) {
+            dateTimesList.add(dateToAdd);
+          }
+        } else {
+          dateTimesList.add(dateToAdd);
+        }
+      }
+    }
+/*
+    do {
+      dateToAdd = dateTimesList.last.add(Duration(days: 1));
+      if (skipWeekEnds) {
+        if (dateToAdd.weekday == DateTime.friday) {
+          dateTimesList.add(dateTimesList.last.add(Duration(days: 3)));
+        } else if (dateToAdd.weekday == DateTime.saturday) {
+          dateTimesList.add(dateTimesList.last.add(Duration(days: 2)));
+        }
+      }
+
+      if (datesToSkip != null) {
+        DateTime dateToSkipFounded = datesToSkip
+            .firstWhere((element) => element == dateToAdd, orElse: () => null);
+
+        if (dateToSkipFounded == null) {
+          dateTimesList.add(dateToAdd);
+        }
+      } else {
+        dateTimesList.add(dateToAdd);
+      }
+    } while (dateToAdd.isBefore(endDate));*/
+
+    return dateTimesList;
+  }
+
 /*  static DateTime getDateTimeFromWeekDayAndWeekNumber(
       int weekOfMonth, int weekDay, DateTime dateTime) {
     print("Week day ${weekDay}");

@@ -22,6 +22,8 @@ class MyHomePage extends StatelessWidget {
   Calendarro monthCalendarro;
 
   Map<DateTime, dynamic> events = new Map<DateTime, dynamic>();
+  List<DateTime> datesDisabled = new List<DateTime>();
+  List<DateTime> dateBetweenRange = new List<DateTime>();
 
   MyHomePage({Key key, this.title}) : super(key: key);
 
@@ -29,6 +31,44 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     var startDate = DateUtils.getFirstDayOfCurrentMonth();
     var endDate = startDate.add(Duration(days: 365));
+
+    dateBetweenRange = DateUtils.getDateTimeListBetweenDates(
+      DateTime.now(),
+      DateTime.now().add(Duration(days: 10)),
+      skipWeekEnds: true,
+      datesToSkip: [
+        new DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 2),
+        new DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 5),
+        new DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 7),
+        new DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day + 3),
+      ],
+    );
+    print("==========START GET DATE RANGE LIST============");
+
+    dateBetweenRange.forEach((element) {
+      print("${element.day}-${element.month}-${element.year}");
+    });
+    print("==========END GET DATE RANGE LIST============");
+
+    datesDisabled = [
+      new DateTime(
+          DateTime.now().year, DateTime.now().month, DateTime.now().day),
+      new DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .add(Duration(days: 7)),
+      new DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .add(Duration(days: 20)),
+      new DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .add(Duration(days: 5)),
+      new DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .add(Duration(days: 13)),
+      new DateTime(
+              DateTime.now().year, DateTime.now().month, DateTime.now().day)
+          .add(Duration(days: 3))
+    ];
 
     events = {
       new DateTime(
@@ -50,13 +90,15 @@ class MyHomePage extends StatelessWidget {
     };
     monthCalendarro = Calendarro(
         startDate: startDate,
+        weekEndDaysEnabled: false,
+        datesDisabled: datesDisabled,
         pageSnapping: true,
         events: events,
-        weekEndDaysEnabled: false,
+        selectedDates: [DateTime.now()],
         scrollDirection: Axis.vertical,
         endDate: endDate,
         displayMode: DisplayMode.MONTHS,
-        selectionMode: SelectionMode.MONTHLY,
+        selectionMode: SelectionMode.RANGE,
         weekdayLabelsRow: CustomWeekdayLabelsRow(),
         onTap: (date, events) {
           print("onTap date: $date");
@@ -68,10 +110,10 @@ class MyHomePage extends StatelessWidget {
       ),
       body: Column(
         children: <Widget>[
-          Container(
+          /* Container(
             color: Colors.orange,
             child: Calendarro(),
-          ),
+          ),*/
           Container(height: 32.0),
           monthCalendarro
         ],

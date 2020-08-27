@@ -1,9 +1,9 @@
+import 'dart:collection';
+
 import 'package:calendarro/calendarro.dart';
 import 'package:calendarro/date_utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-
 
 class CalendarroDayItem extends StatelessWidget {
   CalendarroDayItem({this.date, this.calendarroState, this.onTap, this.events});
@@ -24,6 +24,9 @@ class CalendarroDayItem extends StatelessWidget {
 
     bool daySelected = calendarroState.isDateSelected(date);
 
+    bool dateIsDisabled = calendarroState.isDateDisabled(date);
+
+
     BoxDecoration boxDecoration;
     if (daySelected) {
       boxDecoration = BoxDecoration(color: Colors.blue, shape: BoxShape.circle);
@@ -39,7 +42,7 @@ class CalendarroDayItem extends StatelessWidget {
     List<Widget> dayWidgets = List<Widget>();
 
     dayWidgets.add(
-      Container(
+     dateIsDisabled ? _buildDateDisabled() : Container(
           height: 40.0,
           decoration: boxDecoration,
           child: Align(
@@ -64,19 +67,39 @@ class CalendarroDayItem extends StatelessWidget {
       child: Center(
         child: Stack(alignment: Alignment.bottomCenter, children: dayWidgets),
       ),
-      onTap: handleTap,
+      onTap: dateIsDisabled  ? null : handleTap,
       behavior: HitTestBehavior.translucent,
     ));
   }
 
   void handleTap() {
     if (onTap != null) {
-      onTap(date,events);
+      onTap(date, events);
     }
 
     calendarroState.setSelectedDate(date);
     calendarroState.setCurrentDate(date);
 
+  }
+
+  Widget _buildDateDisabled() {
+    if (calendarroState.widget.disabledDay != null) {
+      return calendarroState.widget.disabledDay;
+    } else {
+      return Container(
+          height: 40.0,
+          child: Align(
+            alignment: Alignment.center,
+            child: Opacity(
+            opacity: 0.5,
+              child: Text(
+                "${date.day}",
+                textAlign: TextAlign.center,
+                style: TextStyle(decoration: TextDecoration.lineThrough),
+              ),
+            ),
+          ));
+    }
   }
 
   List<Widget> _buildEventTileList(List<dynamic> events) {
@@ -85,7 +108,9 @@ class CalendarroDayItem extends StatelessWidget {
     for (int i = 0; i < maxEventTileWidget; i++) {
       eventsChildren.add(_buildEventTile());
       if (i < maxEventTileWidget - 1) {
-        eventsChildren.add(SizedBox(width: 4.0,));
+        eventsChildren.add(SizedBox(
+          width: 4.0,
+        ));
       }
     }
 
